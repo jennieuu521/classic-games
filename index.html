@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Arcade Games</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        apple: {
+                            blue: '#007AFF',
+                            indigo: '#5856D6',
+                            purple: '#AF52DE',
+                            pink: '#FF2D55',
+                            red: '#FF3B30',
+                            orange: '#FF9500',
+                            yellow: '#FFCC00',
+                            green: '#34C759',
+                            teal: '#5AC8FA',
+                            gray: {
+                                100: '#F2F2F7',
+                                200: '#E5E5EA',
+                                300: '#D1D1D6',
+                                400: '#C7C7CC',
+                                500: '#AEAEB2',
+                                600: '#8E8E93',
+                                700: '#636366',
+                                800: '#48484A',
+                                900: '#3A3A3C',
+                            },
+                            darkBg: '#1C1C1E',
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .game-container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+        .game-card {
+            height: 600px;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            background-color: #000;
+        }
+        .game-card-title {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0));
+            color: white;
+            padding: 16px;
+            font-size: 20px;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        /* Snake Game CSS */
+        #snake-game-board {
+            width: 100%;
+            height: 100%;
+            background-color: #212121;
+        }
+        .snake-pixel {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 4px;
+        }
+        .food-pixel {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #FF5722;
+            border-radius: 50%;
+        }
+        .score-display {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            color: white;
+            font-size: 24px;
+            z-index: 10;
+        }
+        .start-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #007AFF;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 20;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+        .start-button:hover {
+            background-color: #0062CC;
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+        .start-button:active {
+            transform: translate(-50%, -50%) scale(0.98);
+        }
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+            padding: 0 20px;
+            z-index: 10;
+        }
+        .countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            font-weight: bold;
+            color: white;
+            z-index: 30;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .pause-button {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 20;
+            border: none;
+            font-size: 18px;
+            display: none;
+        }
+        .pause-button:hover {
+            background-color: rgba(255,255,255,0.3);
+        }
+        .game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 25;
+            display: none;
+        }
+        .game-over-screen h3 {
+            font-size: 32px;
+            margin-bottom: 16px;
+        }
+        .game-over-screen p {
+            font-size: 18px;
+            margin-bottom: 24px;
+        }
+        .restart-button {
+            background-color: #FF5722;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+        .restart-button:hover {
+            background-color: #E64A19;
+        }
+        
+        /* Memory Match Game CSS */
+        #memory-game {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-color: #E0F7FA;
+            overflow: hidden;
+        }
+        .memory-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 10px;
+            width: 90%;
+            height: 80%;
+            margin: 0 auto;
+            padding-top: 20px;
+        }
+        .memory-card {
+            background-color: #3F51B5;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+            position: relative;
+        }
+        .memory-card.flipped {
+            transform: rotateY(180deg);
+        }
+        .memory-card-front, .memory-card-back {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+        }
+        .memory-card-front {
+            background-color: #3F51B5;
+        }
+        .memory-card-back {
+            background-color: white;
+            transform: rotateY(180deg);
+            font-size: 36px;
+        }
+        
+        /* Tetris Game CSS */
+        #tetris-game {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-color: #FAFAFA;
+            overflow: hidden;
+        }
+        #tetris-board {
+            width: 300px;
+            height: 600px;
+            border: 2px solid #333;
+            background-color: #111;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .tetris-cell {
+            width: 30px;
+            height: 30px;
+            box-sizing: border-box;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: absolute;
+        }
+        .tetris-next {
+            width: 120px;
+            height: 120px;
+            border: 2px solid #333;
+            background-color: #111;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+        }
+        .tetris-next .tetris-cell {
+            width: 25px;
+            height: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .tetris-stats {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            color: white;
+            font-weight: bold;
+            background-color: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 10;
+        }
+        .tetris-stats div {
+            margin-bottom: 15px;
+        }
+        
+        /* Whack-a-Mole Game CSS */
+        #whack-a-mole-game {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #8B4513, #D2691E);
+            overflow: hidden;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .mole-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 20px;
+            width: 80%;
+            height: 80%;
+            max-width: 500px;
+            max-height: 500px;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 1;
+        }
+        .mole-hole {
+            position: relative;
+            background: radial-gradient(circle at 30% 30%, #654321, #3a2512);
+            border-radius: 50%;
+            cursor: pointer;
+            overflow: hidden;
+            box-shadow: inset 0 8px 20px rgba(0,0,0,0.5);
+            aspect-ratio: 1;
+            width: 100%;
+        }
+        .mole {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(100%);
+            width: 80%;
+            height: 80%;
+            background: linear-gradient(145deg, #B8860B, #8B4513);
+            border-radius: 50% 50% 45% 45%;
+            transition: transform 0.1s ease-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .mole::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 30%;
+            background: #FFE4B5;
+            border-radius: 50%;
+        }
+        .mole .eye-left,
+        .mole .eye-right {
+            position: absolute;
+            top: 30%;
+            width: 15%;
+            height: 15%;
+            background: #000;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .mole .eye-left {
+            left: 30%;
+        }
+        .mole .eye-right {
+            right: 30%;
+        }
+        .mole.active {
+            transform: translateX(-50%) translateY(10%);
+        }
+        .mole.hit {
+            transform: translateX(-50%) translateY(30%) scale(0.9);
+        }
+        .game-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .game-overlay > * {
+            pointer-events: auto;
+        }
+        .score, .timer {
+            position: absolute;
+            top: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 18px;
+            z-index: 20;
+        }
+        .score {
+            left: 20px;
+        }
+        .timer {
+            right: 20px;
+        }
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 30;
+        }
+        .game-over h2 {
+            font-size: 32px;
+            margin-bottom: 16px;
+        }
+        .game-over p {
+            font-size: 24px;
+            margin-bottom: 24px;
+        }
+
+        /* Sound Controls */
+        .sound-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .sound-controls label {
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sound-controls input[type="range"] {
+            width: 100px;
+        }
+        .sound-controls button {
+            background-color: #007AFF;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .sound-controls button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-apple-darkBg text-gray-900 dark:text-white">
+    <header class="bg-gradient-to-r from-apple-purple to-apple-blue shadow-lg">
+        <div class="container mx-auto px-4 py-6 md:py-8">
+            <div class="text-center">
+                <h1 class="text-3xl md:text-5xl font-bold text-white mb-2">Classic Arcade Games</h1>
+                <p class="text-xl text-white/90 md:text-2xl">Four timeless games to help you relax and have fun!</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <section class="mb-12">
+            <div class="game-container">
+                <!-- Snake Game Card -->
+                <div class="game-card">
+                    <div class="game-card-title">Snake</div>
+                    <div id="snake-game-board">
+                        <button id="snake-start-button" class="start-button" onclick="window.initSnakeGame()">Start Game</button>
+                        <button id="snake-pause-button" class="pause-button">❚❚</button>
+                        <div id="snake-countdown" class="countdown"></div>
+                        <div class="instructions">Use WASD or Arrow keys to move</div>
+                        <div id="snake-game-over" class="game-over-screen">
+                            <h3>Game Over!</h3>
+                            <p>Score: <span id="snake-final-score">0</span></p>
+                            <button id="snake-restart-button" class="restart-button" onclick="window.initSnakeGame()">Play Again</button>
+                        </div>
+                    </div>
+                    <div class="score-display">Score: <span id="snake-score">0</span></div>
+                </div>
+
+                <!-- Memory Match Game Card -->
+                <div class="game-card">
+                    <div class="game-card-title">Memory Match</div>
+                    <div id="memory-game">
+                        <button id="memory-start-button" class="start-button" onclick="window.initMemoryGame()">Start Game</button>
+                        <button id="memory-pause-button" class="pause-button">❚❚</button>
+                        <div id="memory-countdown" class="countdown"></div>
+                        <div class="instructions">Click cards to find matching pairs</div>
+                        <div id="memory-game-over" class="game-over-screen">
+                            <h3>Game Complete!</h3>
+                            <p>Moves: <span id="memory-final-moves">0</span></p>
+                            <p>Time: <span id="memory-final-time">0</span></p>
+                            <button id="memory-restart-button" class="restart-button" onclick="window.initMemoryGame()">Play Again</button>
+                        </div>
+                        <div class="score-display">Moves: <span id="memory-moves">0</span> | Time: <span id="memory-time">0</span></div>
+                        <div class="memory-cards"></div>
+                    </div>
+                </div>
+
+                <!-- Tetris Game Card -->
+                <div class="game-card">
+                    <div class="game-card-title">Tetris</div>
+                    <div id="tetris-game">
+                        <button id="tetris-start-button" class="start-button" onclick="window.initTetrisGame()">Start Game</button>
+                        <button id="tetris-pause-button" class="pause-button">❚❚</button>
+                        <div id="tetris-countdown" class="countdown"></div>
+                        <div class="instructions">Use WASD or Arrow keys to move and rotate</div>
+                        <div id="tetris-game-over" class="game-over-screen">
+                            <h3>Game Over!</h3>
+                            <p>Score: <span id="tetris-final-score">0</span></p>
+                            <p>Level: <span id="tetris-final-level">1</span></p>
+                            <button id="tetris-restart-button" class="restart-button" onclick="window.initTetrisGame()">Play Again</button>
+                        </div>
+                        <div id="tetris-board"></div>
+                        <div class="tetris-stats">
+                            <div>Score: <span id="tetris-score">0</span></div>
+                            <div>Level: <span id="tetris-level">1</span></div>
+                            <div>Lines: <span id="tetris-lines">0</span></div>
+                        </div>
+                        <div class="tetris-next"></div>
+                    </div>
+                </div>
+
+                <!-- Whack-a-Mole Game Card -->
+                <div class="game-card">
+                    <div class="game-card-title">Whack-a-Mole</div>
+                    <div id="whack-a-mole-game">
+                        <div class="game-overlay">
+                            <div class="score">Score: <span id="whack-a-mole-score">0</span></div>
+                            <div class="timer">Time: <span id="whack-a-mole-time">30</span>s</div>
+                            <button id="whack-a-mole-start-button" class="start-button" onclick="window.initWhackAMoleGame()">Start Game</button>
+                            <button id="whack-a-mole-pause-button" class="pause-button" style="display: none;">❚❚</button>
+                            <button id="whack-a-mole-restart-button" class="restart-button" onclick="window.initWhackAMoleGame()" style="display: none;">↺</button>
+                            <div id="whack-a-mole-game-over" class="game-over" style="display: none;">
+                                <h2>Game Over!</h2>
+                                <p>Final Score: <span id="whack-a-mole-final-score">0</span></p>
+                                <button class="restart-button" onclick="window.initWhackAMoleGame()">Play Again</button>
+                            </div>
+                        </div>
+                        <div class="mole-grid"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-12">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-apple-blue dark:text-apple-teal">Game Instructions</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-apple-gray-100 dark:bg-gray-800 rounded-xl p-6 shadow-md">
+                    <h3 class="text-xl font-bold mb-3">Snake</h3>
+                    <p>Use WASD or arrow keys to control the snake. Eat food to grow longer. Game ends if you hit the wall or yourself.</p>
+                </div>
+                <div class="bg-apple-gray-100 dark:bg-gray-800 rounded-xl p-6 shadow-md">
+                    <h3 class="text-xl font-bold mb-3">Memory Match</h3>
+                    <p>Click cards to reveal patterns and find matching pairs. Complete all matches in the least moves and time.</p>
+                </div>
+                <div class="bg-apple-gray-100 dark:bg-gray-800 rounded-xl p-6 shadow-md">
+                    <h3 class="text-xl font-bold mb-3">Tetris</h3>
+                    <p>Use WASD or arrow keys to move and rotate blocks. Clear complete rows to score points. Speed increases with level.</p>
+                </div>
+                <div class="bg-apple-gray-100 dark:bg-gray-800 rounded-xl p-6 shadow-md">
+                    <h3 class="text-xl font-bold mb-3">Whack-a-Mole</h3>
+                    <p>Click the moles as they pop up to score points. Try to hit as many as possible in 30 seconds.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Sound Controls -->
+    <div class="sound-controls">
+        <label>
+            <input type="checkbox" id="sound-toggle" checked>
+            Sound
+        </label>
+        <label>
+            Volume
+            <input type="range" id="volume-control" min="0" max="100" value="50">
+        </label>
+    </div>
+
+    <script>
+        // Initialize sound controls and other setup after DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - Initializing games...');
+            
+            // Initialize sound controls
+            const soundToggle = document.getElementById('sound-toggle');
+            const volumeControl = document.getElementById('volume-control');
+            
+            // Set initial button states
+            const games = ['snake', 'memory', 'tetris', 'whack-a-mole'];
+            games.forEach(game => {
+                const startBtn = document.getElementById(`${game}-start-button`);
+                const pauseBtn = document.getElementById(`${game}-pause-button`);
+                if (startBtn) {
+                    startBtn.style.display = 'flex';
+                    startBtn.style.zIndex = '100';
+                }
+                if (pauseBtn) {
+                    pauseBtn.style.display = 'none';
+                }
+            });
+
+            // Create Whack-a-Mole grid
+            const whackGame = document.getElementById('whack-a-mole-game');
+            if (whackGame && !whackGame.querySelector('.mole-grid')) {
+                const grid = document.createElement('div');
+                grid.className = 'mole-grid';
+                for (let i = 0; i < 9; i++) {
+                    const hole = document.createElement('div');
+                    hole.className = 'mole-hole';
+                    const mole = document.createElement('div');
+                    mole.className = 'mole';
+                    const eyeLeft = document.createElement('div');
+                    eyeLeft.className = 'eye-left';
+                    const eyeRight = document.createElement('div');
+                    eyeRight.className = 'eye-right';
+                    mole.appendChild(eyeLeft);
+                    mole.appendChild(eyeRight);
+                    hole.appendChild(mole);
+                    grid.appendChild(hole);
+                }
+                whackGame.insertBefore(grid, whackGame.firstChild);
+            }
+        });
+
+        // Snake Game Implementation
+        function initSnakeGame() {
+            // ... Snake game code ...
+        }
+
+        // Memory Match Game Implementation
+        function initMemoryGame() {
+            // ... Memory Match game code ...
+        }
+
+        // Tetris Game Implementation
+        function initTetrisGame() {
+            console.log('Starting Tetris Game');
+            const game = document.getElementById('tetris-game');
+            const board = document.getElementById('tetris-board');
+            const nextPieceDisplay = document.querySelector('.tetris-next');
+            const startButton = document.getElementById('tetris-start-button');
+            const pauseButton = document.getElementById('tetris-pause-button');
+            const gameOverScreen = document.getElementById('tetris-game-over');
+            
+            // Clear any existing intervals
+            if (window.tetrisGameLoop) {
+                clearInterval(window.tetrisGameLoop);
+                window.tetrisGameLoop = null;
+            }
+            
+            const BOARD_WIDTH = 10;
+            const BOARD_HEIGHT = 20;
+            const CELL_SIZE = 30;
+            
+            let currentPiece = null;
+            let nextPiece = null;
+            let gameLoop = null;
+            let score = 0;
+            let level = 1;
+            let lines = 0;
+            let grid = Array(BOARD_HEIGHT).fill().map(() => Array(BOARD_WIDTH).fill(0));
+            let isGameStarted = false;
+            let isPaused = false;
+
+            const PIECES = [
+                { shape: [[1,1,1,1]], color: '#00f0f0' },
+                { shape: [[1,1,1],[0,1,0]], color: '#f0a000' },
+                { shape: [[1,1,1],[1,0,0]], color: '#0000f0' },
+                { shape: [[1,1,1],[0,0,1]], color: '#f00000' },
+                { shape: [[1,1],[1,1]], color: '#f0f000' },
+                { shape: [[0,1,1],[1,1,0]], color: '#00f000' },
+                { shape: [[1,1,0],[0,1,1]], color: '#a000f0' }
+            ];
+
+            function createNewPiece() {
+                if (nextPiece) {
+                    currentPiece = nextPiece;
+                } else {
+                    currentPiece = {
+                        ...PIECES[Math.floor(Math.random() * PIECES.length)],
+                        x: Math.floor(BOARD_WIDTH / 2) - 1,
+                        y: 0
+                    };
+                }
+                nextPiece = {
+                    ...PIECES[Math.floor(Math.random() * PIECES.length)],
+                    x: 0,
+                    y: 0
+                };
+                drawBoard();
+                drawNextPiece();
+            }
+
+            function startGameLoop() {
+                // Clear any existing intervals
+                if (gameLoop) {
+                    clearInterval(gameLoop);
+                    gameLoop = null;
+                }
+                if (window.tetrisGameLoop) {
+                    clearInterval(window.tetrisGameLoop);
+                    window.tetrisGameLoop = null;
+                }
+                
+                // Calculate drop speed based on level
+                const dropSpeed = Math.max(100, 1000 - (level * 100));
+                console.log('Starting game loop with drop speed:', dropSpeed);
+                
+                // Start the game loop
+                gameLoop = setInterval(() => {
+                    if (!isPaused && isGameStarted) {
+                        moveDown();
+                        drawBoard();
+                    }
+                }, dropSpeed);
+                
+                // Store the interval ID globally
+                window.tetrisGameLoop = gameLoop;
+            }
+
+            function drawBoard() {
+                const cells = board.getElementsByClassName('tetris-cell');
+                let i = 0;
+                
+                // Draw fixed pieces
+                for (let y = 0; y < BOARD_HEIGHT; y++) {
+                    for (let x = 0; x < BOARD_WIDTH; x++) {
+                        cells[i].style.backgroundColor = grid[y][x] || '#111';
+                        i++;
+                    }
+                }
+                
+                // Draw current piece
+                if (currentPiece) {
+                    currentPiece.shape.forEach((row, y) => {
+                        row.forEach((value, x) => {
+                            if (value) {
+                                const realX = currentPiece.x + x;
+                                const realY = currentPiece.y + y;
+                                if (realY >= 0 && realY < BOARD_HEIGHT && realX >= 0 && realX < BOARD_WIDTH) {
+                                    cells[realY * BOARD_WIDTH + realX].style.backgroundColor = currentPiece.color;
+                                }
+                            }

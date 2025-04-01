@@ -1,6 +1,8 @@
 // Tetris Game Implementation
+// Tetris Game Implementation
 function initTetrisGame() {
     console.log('Starting Tetris Game');
+    // 获取DOM元素
     const game = document.getElementById('tetris-game');
     const board = document.getElementById('tetris-board');
     const nextPieceDisplay = document.querySelector('.tetris-next');
@@ -8,7 +10,7 @@ function initTetrisGame() {
     const pauseButton = document.getElementById('tetris-pause-button');
     const gameOverScreen = document.getElementById('tetris-game-over');
     
-    // 重置游戏状态
+    // 初始化游戏状态
     let currentPiece = null;
     let nextPiece = null;
     let gameLoop = null;
@@ -17,9 +19,7 @@ function initTetrisGame() {
     let lines = 0;
     let grid = Array(20).fill().map(() => Array(10).fill(0));
     let isGameStarted = false;
-    let isPaused = false;
-
-    // 初始化游戏板
+    let isPaused = false;    // 初始化游戏板
     board.innerHTML = '';
     for (let i = 0; i < 200; i++) {
         const cell = document.createElement('div');
@@ -49,9 +49,7 @@ function initTetrisGame() {
 
     // 设置游戏状态
     isGameStarted = true;
-    isPaused = false;
-
-    // 定义方块形状
+    isPaused = false;    // 定义方块形状
     const PIECES = [
         { shape: [[1,1,1,1]], color: '#00f0f0' },
         { shape: [[1,1,1],[0,1,0]], color: '#f0a000' },
@@ -84,9 +82,7 @@ function initTetrisGame() {
             drawBoard();
             drawNextPiece();
         }
-    }
-
-    // 检查碰撞
+    }    // 检查碰撞
     function checkCollision() {
         return currentPiece.shape.some((row, dy) => {
             return row.some((value, dx) => {
@@ -135,9 +131,7 @@ function initTetrisGame() {
             currentPiece.shape = oldShape;
         }
         drawBoard();
-    }
-
-    // 合并方块到网格
+    }    // 合并方块到网格
     function mergePiece() {
         currentPiece.shape.forEach((row, dy) => {
             row.forEach((value, dx) => {
@@ -173,9 +167,7 @@ function initTetrisGame() {
             document.getElementById('tetris-lines').textContent = lines;
             startGameLoop(); // 更新游戏速度
         }
-    }
-
-    // 绘制游戏板
+    }    // 绘制游戏板
     function drawBoard() {
         const cells = board.getElementsByClassName('tetris-cell');
         // 绘制固定方块
@@ -216,9 +208,7 @@ function initTetrisGame() {
                 });
             });
         }
-    }
-
-    // 游戏结束
+    }    // 游戏结束
     function gameOver() {
         isGameStarted = false;
         if (gameLoop) {

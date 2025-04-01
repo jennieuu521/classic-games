@@ -1,277 +1,199 @@
-// Tetris Game Implementation
-// Tetris Game Implementation
-function initTetrisGame() {
-    console.log('Starting Tetris Game');
-    // 获取DOM元素
-    const game = document.getElementById('tetris-game');
-    const board = document.getElementById('tetris-board');
-    const nextPieceDisplay = document.querySelector('.tetris-next');
-    const startButton = document.getElementById('tetris-start-button');
-    const pauseButton = document.getElementById('tetris-pause-button');
-    const gameOverScreen = document.getElementById('tetris-game-over');
-    
-    // 初始化游戏状态
-    let currentPiece = null;
-    let nextPiece = null;
-    let gameLoop = null;
-    let score = 0;
-    let level = 1;
-    let lines = 0;
-    let grid = Array(20).fill().map(() => Array(10).fill(0));
-    let isGameStarted = false;
-    let isPaused = false;    // 初始化游戏板
-    board.innerHTML = '';
-    for (let i = 0; i < 200; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'tetris-cell';
-        cell.style.left = `${(i % 10) * 30}px`;
-        cell.style.top = `${Math.floor(i / 10) * 30}px`;
-        board.appendChild(cell);
-    }
-
-    // 初始化预览区域
-    nextPieceDisplay.innerHTML = '';
-    for (let i = 0; i < 16; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'tetris-cell';
-        cell.style.left = `${(i % 4) * 25}px`;
-        cell.style.top = `${Math.floor(i / 4) * 25}px`;
-        nextPieceDisplay.appendChild(cell);
-    }
-
-    // 更新UI显示
-    startButton.style.display = 'none';
-    pauseButton.style.display = 'flex';
-    gameOverScreen.style.display = 'none';
-    document.getElementById('tetris-score').textContent = '0';
-    document.getElementById('tetris-level').textContent = '1';
-    document.getElementById('tetris-lines').textContent = '0';
-
-    // 设置游戏状态
-    isGameStarted = true;
-    isPaused = false;    // 定义方块形状
-    const PIECES = [
-        { shape: [[1,1,1,1]], color: '#00f0f0' },
-        { shape: [[1,1,1],[0,1,0]], color: '#f0a000' },
-        { shape: [[1,1,1],[1,0,0]], color: '#0000f0' },
-        { shape: [[1,1,1],[0,0,1]], color: '#f00000' },
-        { shape: [[1,1],[1,1]], color: '#f0f000' },
-        { shape: [[0,1,1],[1,1,0]], color: '#00f000' },
-        { shape: [[1,1,0],[0,1,1]], color: '#a000f0' }
-    ];
-
-    // 创建新方块
-    function createNewPiece() {
-        if (!nextPiece) {
-            nextPiece = {
-                ...PIECES[Math.floor(Math.random() * PIECES.length)],
-                x: 3,
-                y: 0
-            };
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Arcade Games</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        currentPiece = nextPiece;
-        nextPiece = {
-            ...PIECES[Math.floor(Math.random() * PIECES.length)],
-            x: 3,
-            y: 0
-        };
-        
-        if (checkCollision()) {
-            gameOver();
-        } else {
-            drawBoard();
-            drawNextPiece();
+        .game-container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
         }
-    }    // 检查碰撞
-    function checkCollision() {
-        return currentPiece.shape.some((row, dy) => {
-            return row.some((value, dx) => {
-                if (!value) return false;
-                const newX = currentPiece.x + dx;
-                const newY = currentPiece.y + dy;
-                return newX < 0 || newX >= 10 || newY >= 20 || 
-                       (newY >= 0 && grid[newY][newX]);
-            });
-        });
-    }
+        .game-card {
+            height: 600px;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            background-color: #000;
+        }
+        .game-card-title {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0));
+            color: white;
+            padding: 16px;
+            font-size: 20px;
+            font-weight: bold;
+            z-index: 10;
+        }
 
-    // 移动方块
-    function moveDown() {
-        currentPiece.y++;
-        if (checkCollision()) {
-            currentPiece.y--;
-            mergePiece();
-            createNewPiece();
+        /* Tetris Game CSS */
+        #tetris-game {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-color: #FAFAFA;
+            overflow: hidden;
         }
-        drawBoard();
-    }
+        #tetris-board {
+            width: 300px;
+            height: 600px;
+            border: 2px solid #333;
+            background-color: #111;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .tetris-cell {
+            width: 30px;
+            height: 30px;
+            box-sizing: border-box;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: absolute;
+        }
+        .tetris-next {
+            width: 120px;
+            height: 120px;
+            border: 2px solid #333;
+            background-color: #111;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+        }
+        .tetris-next .tetris-cell {
+            width: 25px;
+            height: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .tetris-stats {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            color: white;
+            font-weight: bold;
+            background-color: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 10;
+        }
+        .tetris-stats div {
+            margin-bottom: 15px;
+        }
+        .start-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #007AFF;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 20;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+        .start-button:hover {
+            background-color: #0062CC;
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+        .pause-button {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 20;
+            border: none;
+            font-size: 18px;
+            display: none;
+        }
+        .game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.8);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 25;
+        }
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl font-bold mb-2">Classic Arcade Games</h1>
+            <p class="text-xl opacity-90">Four timeless games to help you relax and have fun!</p>
+        </div>
+    </header>
 
-    function moveLeft() {
-        currentPiece.x--;
-        if (checkCollision()) {
-            currentPiece.x++;
-        }
-        drawBoard();
-    }
+    <main class="container mx-auto px-4 py-8">
+        <div class="game-container">
+            <!-- Tetris Game Card -->
+            <div class="game-card">
+                <div class="game-card-title">Tetris</div>
+                <div id="tetris-game">
+                    <button id="tetris-start-button" class="start-button" onclick="initTetrisGame()">Start Game</button>
+                    <button id="tetris-pause-button" class="pause-button">❚❚</button>
+                    <div id="tetris-countdown" class="countdown"></div>
+                    <div class="instructions">Use WASD or Arrow keys to move and rotate</div>
+                    <div id="tetris-game-over" class="game-over-screen">
+                        <h3>Game Over!</h3>
+                        <p>Score: <span id="tetris-final-score">0</span></p>
+                        <p>Level: <span id="tetris-final-level">1</span></p>
+                        <button id="tetris-restart-button" class="restart-button" onclick="initTetrisGame()">Play Again</button>
+                    </div>
+                    <div id="tetris-board"></div>
+                    <div class="tetris-stats">
+                        <div>Score: <span id="tetris-score">0</span></div>
+                        <div>Level: <span id="tetris-level">1</span></div>
+                        <div>Lines: <span id="tetris-lines">0</span></div>
+                    </div>
+                    <div class="tetris-next"></div>
+                </div>
+            </div>
+        </div>
+    </main>
 
-    function moveRight() {
-        currentPiece.x++;
-        if (checkCollision()) {
-            currentPiece.x--;
-        }
-        drawBoard();
-    }
-
-    function rotate() {
-        const oldShape = currentPiece.shape;
-        currentPiece.shape = currentPiece.shape[0].map((_, i) => 
-            currentPiece.shape.map(row => row[i]).reverse()
-        );
-        if (checkCollision()) {
-            currentPiece.shape = oldShape;
-        }
-        drawBoard();
-    }    // 合并方块到网格
-    function mergePiece() {
-        currentPiece.shape.forEach((row, dy) => {
-            row.forEach((value, dx) => {
-                if (value) {
-                    const newY = currentPiece.y + dy;
-                    const newX = currentPiece.x + dx;
-                    if (newY >= 0) {
-                        grid[newY][newX] = currentPiece.color;
-                    }
-                }
-            });
-        });
-        clearLines();
-    }
-
-    // 清除完整行
-    function clearLines() {
-        let linesCleared = 0;
-        for (let y = 19; y >= 0; y--) {
-            if (grid[y].every(cell => cell)) {
-                grid.splice(y, 1);
-                grid.unshift(Array(10).fill(0));
-                linesCleared++;
-                y++;
-            }
-        }
-        if (linesCleared > 0) {
-            lines += linesCleared;
-            score += linesCleared * 100 * level;
-            level = Math.floor(lines / 10) + 1;
-            document.getElementById('tetris-score').textContent = score;
-            document.getElementById('tetris-level').textContent = level;
-            document.getElementById('tetris-lines').textContent = lines;
-            startGameLoop(); // 更新游戏速度
-        }
-    }    // 绘制游戏板
-    function drawBoard() {
-        const cells = board.getElementsByClassName('tetris-cell');
-        // 绘制固定方块
-        for (let y = 0; y < 20; y++) {
-            for (let x = 0; x < 10; x++) {
-                cells[y * 10 + x].style.backgroundColor = grid[y][x] || '#111';
-            }
-        }
-        // 绘制当前方块
-        if (currentPiece) {
-            currentPiece.shape.forEach((row, dy) => {
-                row.forEach((value, dx) => {
-                    if (value) {
-                        const newY = currentPiece.y + dy;
-                        const newX = currentPiece.x + dx;
-                        if (newY >= 0 && newY < 20 && newX >= 0 && newX < 10) {
-                            cells[newY * 10 + newX].style.backgroundColor = currentPiece.color;
-                        }
-                    }
-                });
-            });
-        }
-    }
-
-    // 绘制下一个方块
-    function drawNextPiece() {
-        const cells = nextPieceDisplay.getElementsByClassName('tetris-cell');
-        cells.forEach(cell => cell.style.backgroundColor = '#111');
-        if (nextPiece) {
-            nextPiece.shape.forEach((row, dy) => {
-                row.forEach((value, dx) => {
-                    if (value) {
-                        const index = dy * 4 + dx;
-                        if (index < cells.length) {
-                            cells[index].style.backgroundColor = nextPiece.color;
-                        }
-                    }
-                });
-            });
-        }
-    }    // 游戏结束
-    function gameOver() {
-        isGameStarted = false;
-        if (gameLoop) {
-            clearInterval(gameLoop);
-            gameLoop = null;
-        }
-        document.getElementById('tetris-final-score').textContent = score;
-        document.getElementById('tetris-final-level').textContent = level;
-        gameOverScreen.style.display = 'flex';
-        startButton.style.display = 'flex';
-        pauseButton.style.display = 'none';
-    }
-
-    // 游戏循环
-    function startGameLoop() {
-        if (gameLoop) {
-            clearInterval(gameLoop);
-        }
-        const dropSpeed = Math.max(100, 1000 - (level * 100));
-        gameLoop = setInterval(() => {
-            if (!isPaused && isGameStarted) {
-                moveDown();
-            }
-        }, dropSpeed);
-    }
-
-    // 键盘控制
-    function handleKeyPress(event) {
-        if (!isGameStarted || isPaused) return;
-        switch(event.key) {
-            case 'ArrowLeft':
-            case 'a':
-            case 'A':
-                moveLeft();
-                break;
-            case 'ArrowRight':
-            case 'd':
-            case 'D':
-                moveRight();
-                break;
-            case 'ArrowDown':
-            case 's':
-            case 'S':
-                moveDown();
-                break;
-            case 'ArrowUp':
-            case 'w':
-            case 'W':
-                rotate();
-                break;
-        }
-    }
-
-    // 暂停按钮事件
-    pauseButton.onclick = () => {
-        isPaused = !isPaused;
-        pauseButton.textContent = isPaused ? '▶' : '❚❚';
-    };
-
-    // 添加键盘事件监听
-    document.addEventListener('keydown', handleKeyPress);
-
-    // 开始游戏
-    createNewPiece();
-    startGameLoop();
-}
+    <!-- 游戏脚本 -->
+    <script src="games/tetris.js"></script>
+</body>
+</html>
